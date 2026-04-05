@@ -1,0 +1,24 @@
+{
+	"name": "config_file_ds",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "from_files_to_database",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "load_config.csv",
+				"fileSystem": "configs"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": []
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}

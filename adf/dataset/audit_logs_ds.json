@@ -1,0 +1,44 @@
+{
+	"name": "audit_logs_ds",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "audit_logs_ls",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "AzureSqlTable",
+		"schema": [
+			{
+				"name": "id",
+				"type": "bigint",
+				"precision": 19
+			},
+			{
+				"name": "data_source",
+				"type": "varchar"
+			},
+			{
+				"name": "tablename",
+				"type": "varchar"
+			},
+			{
+				"name": "numberofrowscopied",
+				"type": "int",
+				"precision": 10
+			},
+			{
+				"name": "watermarkcolumnname",
+				"type": "varchar"
+			},
+			{
+				"name": "loaddate",
+				"type": "timestamp"
+			}
+		],
+		"typeProperties": {
+			"schema": "dbo",
+			"table": "load_logs"
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
