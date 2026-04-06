@@ -1,0 +1,33 @@
+{
+	"$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentParameters.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"value": "mp-practice-adf"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_server": {
+			"value": "ttchcemr.database.windows.net"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_database": {
+			"value": "@{linkedService().db_name}"
+		},
+		"AzureSqlDatabase1_properties_typeProperties_userName": {
+			"value": "mpmukundh"
+		},
+		"audit_logs_ls_properties_typeProperties_server": {
+			"value": "ttchcemr.database.windows.net"
+		},
+		"audit_logs_ls_properties_typeProperties_database": {
+			"value": "audit-logs"
+		},
+		"audit_logs_ls_properties_typeProperties_userName": {
+			"value": "mpmukundh"
+		},
+		"from_files_to_database_properties_typeProperties_url": {
+			"value": "https://mpmypracticesadev.dfs.core.windows.net/"
+		},
+		"mp_practice_hc_kv_ls_properties_typeProperties_baseUrl": {
+			"value": "https://mp-practice-hc-kv.vault.azure.net/"
+		}
+	}
+}
