@@ -166,14 +166,7 @@
 							"type": "IfCondition",
 							"state": "Inactive",
 							"onInactiveMarkAs": "Succeeded",
-							"dependsOn": [
-								{
-									"activity": "If Condition - Archive",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
+							"dependsOn": [],
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
@@ -457,7 +450,7 @@
 							"type": "IfCondition",
 							"dependsOn": [
 								{
-									"activity": "If Condition - Full or Incremental",
+									"activity": "If Condition - Archive",
 									"dependencyConditions": [
 										"Succeeded"
 									]
