@@ -14,6 +14,9 @@
 		"AzureSqlDatabase1_properties_typeProperties_userName": {
 			"value": "mpmukundh"
 		},
+		"Azure_Databricks_ls_properties_typeProperties_existingClusterId": {
+			"value": "0406-101639-kg5xzr17"
+		},
 		"audit_logs_ls_properties_typeProperties_server": {
 			"value": "ttchcemr.database.windows.net"
 		},

@@ -19,6 +19,10 @@
 			"type": "string",
 			"defaultValue": "mpmukundh"
 		},
+		"Azure_Databricks_ls_properties_typeProperties_existingClusterId": {
+			"type": "string",
+			"defaultValue": "0406-101639-kg5xzr17"
+		},
 		"audit_logs_ls_properties_typeProperties_server": {
 			"type": "string",
 			"defaultValue": "ttchcemr.database.windows.net"
@@ -362,6 +366,331 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/pipeline2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "If Condition - Full or Incremental",
+						"type": "IfCondition",
+						"dependsOn": [],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@equals(pipeline().parameters.load_type, 'Full')",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Fetch_logs",
+									"type": "Lookup",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "@concat(\n 'select coalesce(cast(max(loaddate) as date),''',\n '1900-01-01',''') as last_fetched_date from load_logs where ',\n ' data_source=''',pipeline().parameters.datasource\n,''' and tablename=''',pipeline().parameters.table_name,''''\n)",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"dataset": {
+											"referenceName": "audit_logs_ds",
+											"type": "DatasetReference",
+											"parameters": {}
+										},
+										"firstRowOnly": true
+									}
+								},
+								{
+									"name": "Insert_Logs_Incremental_Load",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "Incremental_Load_CP",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "audit_logs_ls",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "@concat(\n 'insert into load_logs(\n data_source,tablename,numberofrowscopied,watermarkcolumnname,loaddate) values\n (''',pipeline().parameters.datasource,''',''',pipeline().parameters.table_name,''',',\n activity('Incremental_Load_CP').output.rowsCopied,',''',\n pipeline().parameters.watermark_column,''',''',utcNow(),''')'\n)",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								},
+								{
+									"name": "Incremental_Load_CP",
+									"type": "Copy",
+									"dependsOn": [
+										{
+											"activity": "Fetch_logs",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 5,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "@concat(\n 'select *,''',\npipeline().parameters.datasource,\n ''' as datasource from ',\npipeline().parameters.table_name,\n ' where ',\npipeline().parameters.watermark_column,\n ' >= ''',\n activity('Fetch_logs').output.firstRow.last_fetched_date,\n ''''\n)",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "hosa_b_db_ds",
+											"type": "DatasetReference",
+											"parameters": {
+												"schema_name": {
+													"value": "@pipeline().parameters.schema_name",
+													"type": "Expression"
+												},
+												"table_name": {
+													"value": "@pipeline().parameters.table_name",
+													"type": "Expression"
+												},
+												"db_name": {
+													"value": "@pipeline().parameters.database",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "bronze_file_exists_par_ds",
+											"type": "DatasetReference",
+											"parameters": {
+												"directory": {
+													"value": "@pipeline().parameters.target_path",
+													"type": "Expression"
+												},
+												"file_name": {
+													"value": "@pipeline().parameters.table_name",
+													"type": "Expression"
+												},
+												"container": "bronze"
+											}
+										}
+									]
+								}
+							],
+							"ifTrueActivities": [
+								{
+									"name": "Full_Load_CP",
+									"type": "Copy",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 5,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"source": {
+											"type": "AzureSqlSource",
+											"sqlReaderQuery": {
+												"value": "@concat('select *, ''',pipeline().parameters.datasource,''' as datasource from ',pipeline().parameters.table_name)",
+												"type": "Expression"
+											},
+											"queryTimeout": "02:00:00",
+											"partitionOption": "None"
+										},
+										"sink": {
+											"type": "ParquetSink",
+											"storeSettings": {
+												"type": "AzureBlobFSWriteSettings"
+											},
+											"formatSettings": {
+												"type": "ParquetWriteSettings"
+											}
+										},
+										"enableStaging": false,
+										"translator": {
+											"type": "TabularTranslator",
+											"typeConversion": true,
+											"typeConversionSettings": {
+												"allowDataTruncation": true,
+												"treatBooleanAsNumber": false
+											}
+										}
+									},
+									"inputs": [
+										{
+											"referenceName": "hosa_b_db_ds",
+											"type": "DatasetReference",
+											"parameters": {
+												"schema_name": {
+													"value": "@pipeline().parameters.schema_name",
+													"type": "Expression"
+												},
+												"table_name": {
+													"value": "@pipeline().parameters.table_name",
+													"type": "Expression"
+												},
+												"db_name": {
+													"value": "@pipeline().parameters.database",
+													"type": "Expression"
+												}
+											}
+										}
+									],
+									"outputs": [
+										{
+											"referenceName": "bronze_file_exists_par_ds",
+											"type": "DatasetReference",
+											"parameters": {
+												"directory": {
+													"value": "@pipeline().parameters.target_path",
+													"type": "Expression"
+												},
+												"file_name": {
+													"value": "@pipeline().parameters.table_name",
+													"type": "Expression"
+												},
+												"container": "bronze"
+											}
+										}
+									]
+								},
+								{
+									"name": "Insert_Logs_Full_Load",
+									"type": "Script",
+									"dependsOn": [
+										{
+											"activity": "Full_Load_CP",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "0.12:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"linkedServiceName": {
+										"referenceName": "audit_logs_ls",
+										"type": "LinkedServiceReference"
+									},
+									"typeProperties": {
+										"scripts": [
+											{
+												"type": "Query",
+												"text": {
+													"value": "@concat(\n 'insert into load_logs(\n data_source,tablename,numberofrowscopied,watermarkcolumnname,loaddate) values\n (''',pipeline().parameters.datasource,''',''',pipeline().parameters.table_name,''',',\n activity('Full_Load_CP').output.rowsCopied,',''',\n pipeline().parameters.watermark_column,''',''',utcNow(),''')'\n)",
+													"type": "Expression"
+												}
+											}
+										],
+										"scriptBlockExecutionTimeout": "02:00:00"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {}
+				},
+				"parameters": {
+					"load_type": {
+						"type": "string"
+					},
+					"schema_name": {
+						"type": "string"
+					},
+					"table_name": {
+						"type": "string"
+					},
+					"database": {
+						"type": "string"
+					},
+					"datasource": {
+						"type": "string"
+					},
+					"watermark_column": {
+						"type": "string"
+					},
+					"target_path": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/audit_logs_ds')]",
+				"[concat(variables('factoryId'), '/linkedServices/audit_logs_ls')]",
+				"[concat(variables('factoryId'), '/datasets/hosa_b_db_ds')]",
+				"[concat(variables('factoryId'), '/datasets/bronze_file_exists_par_ds')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/sumit Youtube project')]",
 			"type": "Microsoft.DataFactory/factories/pipelines",
 			"apiVersion": "2018-06-01",
@@ -529,14 +858,9 @@
 								{
 									"name": "If Condition - Full or Incremental",
 									"type": "IfCondition",
-									"dependsOn": [
-										{
-											"activity": "If Condition - Archive",
-											"dependencyConditions": [
-												"Succeeded"
-											]
-										}
-									],
+									"state": "Inactive",
+									"onInactiveMarkAs": "Succeeded",
+									"dependsOn": [],
 									"userProperties": [],
 									"typeProperties": {
 										"expression": {
@@ -815,6 +1139,90 @@
 											}
 										]
 									}
+								},
+								{
+									"name": "If Condition1",
+									"type": "IfCondition",
+									"dependsOn": [
+										{
+											"activity": "If Condition - Archive",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@equals(item().is_active,'1')",
+											"type": "Expression"
+										},
+										"ifTrueActivities": [
+											{
+												"name": "Execute Pipeline1",
+												"type": "ExecutePipeline",
+												"dependsOn": [],
+												"policy": {
+													"secureInput": false
+												},
+												"userProperties": [
+													{
+														"name": "Load_Type",
+														"value": ""
+													},
+													{
+														"name": "Table_Name"
+													},
+													{
+														"name": "Data_Source"
+													},
+													{
+														"name": "Data_base"
+													},
+													{
+														"name": "Water_Mark"
+													}
+												],
+												"typeProperties": {
+													"pipeline": {
+														"referenceName": "pipeline2",
+														"type": "PipelineReference"
+													},
+													"waitOnCompletion": true,
+													"parameters": {
+														"load_type": {
+															"value": "@item().loadtype",
+															"type": "Expression"
+														},
+														"schema_name": {
+															"value": "@split(item().tablename,'.')[0]",
+															"type": "Expression"
+														},
+														"table_name": {
+															"value": "@split(item().tablename,'.')[1]",
+															"type": "Expression"
+														},
+														"database": {
+															"value": "@item().database",
+															"type": "Expression"
+														},
+														"datasource": {
+															"value": "@item().datasource",
+															"type": "Expression"
+														},
+														"watermark_column": {
+															"value": "@item().watermark",
+															"type": "Expression"
+														},
+														"target_path": {
+															"value": "@item().targetpath",
+															"type": "Expression"
+														}
+													}
+												}
+											}
+										]
+									}
 								}
 							]
 						}
@@ -864,7 +1272,8 @@
 				"[concat(variables('factoryId'), '/datasets/bronze_file_exists_par_ds')]",
 				"[concat(variables('factoryId'), '/datasets/audit_logs_ds')]",
 				"[concat(variables('factoryId'), '/linkedServices/audit_logs_ls')]",
-				"[concat(variables('factoryId'), '/datasets/hosa_b_db_ds')]"
+				"[concat(variables('factoryId'), '/datasets/hosa_b_db_ds')]",
+				"[concat(variables('factoryId'), '/pipelines/pipeline2')]"
 			]
 		},
 		{
@@ -1170,6 +1579,30 @@
 						},
 						"secretName": "sql-db-fs"
 					}
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/mp_practice_hc_kv_ls')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Azure_Databricks_ls')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureDatabricks",
+				"typeProperties": {
+					"domain": "https://adb-7405617083819589.9.azuredatabricks.net",
+					"accessToken": {
+						"type": "AzureKeyVaultSecret",
+						"store": {
+							"referenceName": "mp_practice_hc_kv_ls",
+							"type": "LinkedServiceReference"
+						},
+						"secretName": "adb-ack-kv"
+					},
+					"existingClusterId": "[parameters('Azure_Databricks_ls_properties_typeProperties_existingClusterId')]"
 				}
 			},
 			"dependsOn": [
