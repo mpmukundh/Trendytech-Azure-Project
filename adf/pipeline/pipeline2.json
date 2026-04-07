@@ -70,7 +70,7 @@
 									{
 										"type": "Query",
 										"text": {
-											"value": "@concat(\n 'insert into load_logs(\n data_source,tablename,numberofrowscopied,watermarkcolumnname,loaddate) values\n (''',item().datasource,''',''',item().tablename,''',',\n activity('Incremental_Load_CP').output.rowsCopied,',''',\n item().watermark,''',''',utcNow(),''')'\n)",
+											"value": "@concat(\n 'insert into load_logs(\n data_source,tablename,numberofrowscopied,watermarkcolumnname,loaddate) values\n (''',pipeline().parameters.datasource,''',''',pipeline().parameters.table_name,''',',\n activity('Incremental_Load_CP').output.rowsCopied,',''',\n pipeline().parameters.watermark_column,''',''',utcNow(),''')'\n)",
 											"type": "Expression"
 										}
 									}
@@ -152,11 +152,11 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"directory": {
-											"value": "@item().targetpath",
+											"value": "@pipeline().parameters.target_path",
 											"type": "Expression"
 										},
 										"file_name": {
-											"value": "@split(item().tablename,'.')[1]",
+											"value": "@pipeline().parameters.table_name",
 											"type": "Expression"
 										},
 										"container": "bronze"
