@@ -101,7 +101,7 @@
 								"source": {
 									"type": "AzureSqlSource",
 									"sqlReaderQuery": {
-										"value": "@concat(\n 'select *,''',\n item().datasource,\n ''' as datasource from ',\n item().tablename,\n ' where ',\n item().watermark,\n ' >= ''',\n activity('Fetch_logs').output.firstRow.last_fetched_date,\n ''''\n)",
+										"value": "@concat(\n 'select *,''',\npipeline().parameters.datasource,\n ''' as datasource from ',\npipeline().parameters.table_name,\n ' where ',\npipeline().parameters.watermark_column,\n ' >= ''',\n activity('Fetch_logs').output.firstRow.last_fetched_date,\n ''''\n)",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -132,15 +132,15 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"schema_name": {
-											"value": "@split(item().tablename, '.')[0]",
+											"value": "@pipeline().parameters.schema_name",
 											"type": "Expression"
 										},
 										"table_name": {
-											"value": "@split(item().tablename, '.')[1]",
+											"value": "@pipeline().parameters.table_name",
 											"type": "Expression"
 										},
 										"db_name": {
-											"value": "@item().database",
+											"value": "@pipeline().parameters.database",
 											"type": "Expression"
 										}
 									}
