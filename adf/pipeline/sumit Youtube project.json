@@ -470,24 +470,7 @@
 										"policy": {
 											"secureInput": false
 										},
-										"userProperties": [
-											{
-												"name": "Load_Type",
-												"value": ""
-											},
-											{
-												"name": "Table_Name"
-											},
-											{
-												"name": "Data_Source"
-											},
-											{
-												"name": "Data_base"
-											},
-											{
-												"name": "Water_Mark"
-											}
-										],
+										"userProperties": [],
 										"typeProperties": {
 											"pipeline": {
 												"referenceName": "pipeline2",
@@ -499,7 +482,10 @@
 													"value": "@item().loadtype",
 													"type": "Expression"
 												},
-												"schema_name": "@split(item().tablename,'.')[0]",
+												"schema_name": {
+													"value": "@split(item().tablename,'.')[0]",
+													"type": "Expression"
+												},
 												"table_name": {
 													"value": "@split(item().tablename,'.')[1]",
 													"type": "Expression"
@@ -508,8 +494,14 @@
 													"value": "@item().database",
 													"type": "Expression"
 												},
-												"datasource": "@item().datasource",
-												"watermark_column": "@item().watermark",
+												"datasource": {
+													"value": "@item().datasource",
+													"type": "Expression"
+												},
+												"watermark_column": {
+													"value": "@item().watermark",
+													"type": "Expression"
+												},
 												"target_path": {
 													"value": "@item().targetpath",
 													"type": "Expression"
