@@ -6,9 +6,10 @@
 				"name": "If Condition - Full or Incremental",
 				"type": "IfCondition",
 				"dependsOn": [],
+				"userProperties": [],
 				"typeProperties": {
 					"expression": {
-						"value": "@equals(pipeline().parameters.Load_Type, 'Full')",
+						"value": "@equals(pipeline().parameters.load_type, 'Full')",
 						"type": "Expression"
 					},
 					"ifFalseActivities": [
@@ -28,7 +29,7 @@
 								"source": {
 									"type": "AzureSqlSource",
 									"sqlReaderQuery": {
-										"value": "@concat(\n 'select coalesce(cast(max(loaddate) as date),''',\n '1900-01-01',''') as last_fetched_date from load_logs where ',\n ' data_source=''',item().datasource,''' and tablename=''',item().tablename,''''\n)",
+										"value": "@concat(\n 'select coalesce(cast(max(loaddate) as date),''',\n '1900-01-01',''') as last_fetched_date from load_logs where ',\n ' data_source=''',pipeline().parameters.datasource\n,''' and tablename=''',pipeline().parameters.table_name,''''\n)",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -181,7 +182,7 @@
 								"source": {
 									"type": "AzureSqlSource",
 									"sqlReaderQuery": {
-										"value": "@concat('select *, ''',item().datasource,''' as datasource from ',item().tablename)",
+										"value": "@concat('select *, ''',pipeline().parameters.datasource,''' as datasource from ',pipeline().parameters.table_name)",
 										"type": "Expression"
 									},
 									"queryTimeout": "02:00:00",
@@ -212,15 +213,15 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"schema_name": {
-											"value": "@split(item().tablename,'.')[0]",
+											"value": "@pipeline().parameters.schema_name",
 											"type": "Expression"
 										},
 										"table_name": {
-											"value": "@split(item().tablename,'.')[1]",
+											"value": "@pipeline().parameters.table_name",
 											"type": "Expression"
 										},
 										"db_name": {
-											"value": "@item().database",
+											"value": "@pipeline().parameters.database",
 											"type": "Expression"
 										}
 									}
@@ -232,11 +233,11 @@
 									"type": "DatasetReference",
 									"parameters": {
 										"directory": {
-											"value": "@item().targetpath",
+											"value": "@pipeline().parameters.target_path",
 											"type": "Expression"
 										},
 										"file_name": {
-											"value": "@split(item().tablename,'.')[1]",
+											"value": "@pipeline().parameters.table_name",
 											"type": "Expression"
 										},
 										"container": "bronze"
@@ -272,7 +273,7 @@
 									{
 										"type": "Query",
 										"text": {
-											"value": "@concat(\n 'insert into load_logs(\n data_source,tablename,numberofrowscopied,watermarkcolumnname,loaddate) values\n (''',item().datasource,''',''',item().tablename,''',',\n activity('Full_Load_CP').output.rowsCopied,',''',\n item().watermark,''',''',utcNow(),''')'\n)",
+											"value": "@concat(\n 'insert into load_logs(\n data_source,tablename,numberofrowscopied,watermarkcolumnname,loaddate) values\n (''',pipeline().parameters.datasource,''',''',pipeline().parameters.table_name,''',',\n activity('Full_Load_CP').output.rowsCopied,',''',\n pipeline().parameters.watermark_column,''',''',utcNow(),''')'\n)",
 											"type": "Expression"
 										}
 									}
@@ -285,9 +286,26 @@
 			}
 		],
 		"parameters": {
-			"Load_Type": {
-				"type": "string",
-				"defaultValue": "@item().loadtype"
+			"load_type": {
+				"type": "string"
+			},
+			"schema_name": {
+				"type": "string"
+			},
+			"table_name": {
+				"type": "string"
+			},
+			"database": {
+				"type": "string"
+			},
+			"datasource": {
+				"type": "string"
+			},
+			"watermark_column": {
+				"type": "string"
+			},
+			"target_path": {
+				"type": "string"
 			}
 		},
 		"annotations": []
