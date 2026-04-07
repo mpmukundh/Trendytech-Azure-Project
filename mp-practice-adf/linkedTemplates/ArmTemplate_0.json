@@ -1562,24 +1562,7 @@
 												"policy": {
 													"secureInput": false
 												},
-												"userProperties": [
-													{
-														"name": "Load_Type",
-														"value": ""
-													},
-													{
-														"name": "Table_Name"
-													},
-													{
-														"name": "Data_Source"
-													},
-													{
-														"name": "Data_base"
-													},
-													{
-														"name": "Water_Mark"
-													}
-												],
+												"userProperties": [],
 												"typeProperties": {
 													"pipeline": {
 														"referenceName": "pipeline2",
