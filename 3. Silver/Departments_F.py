@@ -1,4 +1,9 @@
 # Databricks notebook source
+# MAGIC %sql
+# MAGIC USE CATALOG healthcare;
+
+# COMMAND ----------
+
 from pyspark.sql import SparkSession, functions as f
 
 #Reading Hospital A departments data 

@@ -1,4 +1,8 @@
 -- Databricks notebook source
+USE CATALOG healthcare;
+
+-- COMMAND ----------
+
 create table if not exists gold.fact_transactions
 (
   TransactionID string,
