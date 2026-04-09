@@ -14,10 +14,6 @@ df_hosb.createOrReplaceTempView("patients_hosb")
 
 # COMMAND ----------
 
-
-
-# COMMAND ----------
-
 # MAGIC %sql
 # MAGIC select * from patients_hosa
 
@@ -47,16 +43,16 @@ df_hosb.createOrReplaceTempView("patients_hosb")
 # MAGIC     FROM patients_hosa
 # MAGIC     UNION ALL
 # MAGIC     SELECT 
-# MAGIC     ID AS SRC_PatientID,
-# MAGIC     F_Name AS FirstName,
-# MAGIC     L_Name AS LastName,
-# MAGIC     M_Name ASMiddleName,
+# MAGIC     PatientID AS SRC_PatientID,
+# MAGIC     FirstName AS FirstName,
+# MAGIC     LastName AS LastName,
+# MAGIC     MiddleName AS MiddleName,
 # MAGIC     SSN,
 # MAGIC     PhoneNumber,
 # MAGIC     Gender,
 # MAGIC     DOB,
 # MAGIC     Address,
-# MAGIC     Updated_Date AS ModifiedDate,
+# MAGIC     ModifiedDate AS ModifiedDate,
 # MAGIC     datasource
 # MAGIC      FROM patients_hosb
 # MAGIC )
