@@ -1,5 +1,5 @@
 {
-	"name": "pipeline2",
+	"name": "incre_full_load",
 	"properties": {
 		"activities": [
 			{

@@ -464,7 +464,7 @@
 								},
 								"ifTrueActivities": [
 									{
-										"name": "Execute Pipeline1",
+										"name": "Full_and_incremental_load",
 										"type": "ExecutePipeline",
 										"dependsOn": [],
 										"policy": {
@@ -473,7 +473,7 @@
 										"userProperties": [],
 										"typeProperties": {
 											"pipeline": {
-												"referenceName": "pipeline2",
+												"referenceName": "incre_full_load",
 												"type": "PipelineReference"
 											},
 											"waitOnCompletion": true,
