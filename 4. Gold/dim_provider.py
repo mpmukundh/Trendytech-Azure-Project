@@ -1,5 +1,10 @@
 # Databricks notebook source
 # MAGIC %sql
+# MAGIC USE CATALOG healthcare;
+
+# COMMAND ----------
+
+# MAGIC %sql
 # MAGIC CREATE TABLE IF NOT EXISTS gold.dim_provider
 # MAGIC (
 # MAGIC ProviderID string,

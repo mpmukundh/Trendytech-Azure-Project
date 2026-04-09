@@ -1,0 +1,19 @@
+{
+	"name": "from_files_to_database",
+	"properties": {
+		"annotations": [],
+		"type": "AzureBlobFS",
+		"typeProperties": {
+			"url": "https://mpmypracticesadev.dfs.core.windows.net/",
+			"accountKey": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "mp_practice_hc_kv_ls",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "mpmypracticesadev-kv"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
+}

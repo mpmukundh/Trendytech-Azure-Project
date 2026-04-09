@@ -1,0 +1,197 @@
+{
+	"name": "silver_to_gold_notebooks",
+	"properties": {
+		"description": "Azure Databricks Notebooks",
+		"activities": [
+			{
+				"name": "slv_patients",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/msanantha.srikrishnan.chy22_itbhu.ac.in#ext#@msananthasrikrishnanchy22it.onmicrosoft.com/Trendytech-Azure-Project/3. Silver/Patient"
+				},
+				"linkedServiceName": {
+					"referenceName": "Azure_Databricks_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "gold_patients",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "slv_patients",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/msanantha.srikrishnan.chy22_itbhu.ac.in#ext#@msananthasrikrishnanchy22it.onmicrosoft.com/Trendytech-Azure-Project/4. Gold/dim_patient"
+				},
+				"linkedServiceName": {
+					"referenceName": "Azure_Databricks_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "slv_departments",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/msanantha.srikrishnan.chy22_itbhu.ac.in#ext#@msananthasrikrishnanchy22it.onmicrosoft.com/Trendytech-Azure-Project/3. Silver/Departments_F"
+				},
+				"linkedServiceName": {
+					"referenceName": "Azure_Databricks_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "gold_departments",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "slv_departments",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/msanantha.srikrishnan.chy22_itbhu.ac.in#ext#@msananthasrikrishnanchy22it.onmicrosoft.com/Trendytech-Azure-Project/4. Gold/dim_department"
+				},
+				"linkedServiceName": {
+					"referenceName": "Azure_Databricks_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "slv_providers",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/msanantha.srikrishnan.chy22_itbhu.ac.in#ext#@msananthasrikrishnanchy22it.onmicrosoft.com/Trendytech-Azure-Project/3. Silver/Providers_F"
+				},
+				"linkedServiceName": {
+					"referenceName": "Azure_Databricks_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "gold_providers",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "slv_providers",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/msanantha.srikrishnan.chy22_itbhu.ac.in#ext#@msananthasrikrishnanchy22it.onmicrosoft.com/Trendytech-Azure-Project/4. Gold/dim_provider"
+				},
+				"linkedServiceName": {
+					"referenceName": "Azure_Databricks_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "slv_transactions",
+				"type": "DatabricksNotebook",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/msanantha.srikrishnan.chy22_itbhu.ac.in#ext#@msananthasrikrishnanchy22it.onmicrosoft.com/Trendytech-Azure-Project/3. Silver/Transactions"
+				},
+				"linkedServiceName": {
+					"referenceName": "Azure_Databricks_ls",
+					"type": "LinkedServiceReference"
+				}
+			},
+			{
+				"name": "gold_transactions",
+				"type": "DatabricksNotebook",
+				"dependsOn": [
+					{
+						"activity": "slv_transactions",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"policy": {
+					"timeout": "0.12:00:00",
+					"retry": 3,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"notebookPath": "/Users/msanantha.srikrishnan.chy22_itbhu.ac.in#ext#@msananthasrikrishnanchy22it.onmicrosoft.com/Trendytech-Azure-Project/4. Gold/fact_transaction"
+				},
+				"linkedServiceName": {
+					"referenceName": "Azure_Databricks_ls",
+					"type": "LinkedServiceReference"
+				}
+			}
+		],
+		"annotations": []
+	}
+}

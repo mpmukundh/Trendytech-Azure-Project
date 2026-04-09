@@ -1,0 +1,24 @@
+{
+	"name": "audit_logs_ls",
+	"properties": {
+		"annotations": [],
+		"type": "AzureSqlDatabase",
+		"typeProperties": {
+			"server": "ttchcemr.database.windows.net",
+			"database": "audit-logs",
+			"encrypt": "mandatory",
+			"trustServerCertificate": false,
+			"authenticationType": "SQL",
+			"userName": "mpmukundh",
+			"password": {
+				"type": "AzureKeyVaultSecret",
+				"store": {
+					"referenceName": "mp_practice_hc_kv_ls",
+					"type": "LinkedServiceReference"
+				},
+				"secretName": "sql-db-fs"
+			}
+		}
+	},
+	"type": "Microsoft.DataFactory/factories/linkedservices"
+}

@@ -1,11 +1,16 @@
 # Databricks notebook source
+# MAGIC %sql
+# MAGIC USE CATALOG healthcare;
+
+# COMMAND ----------
+
 from pyspark.sql import SparkSession, functions as f
 
 #Reading Hospital A departments data 
-df_hosa=spark.read.parquet("/mnt/bronze/hosa/departments")
+df_hosa=spark.read.parquet("abfss://bronze@mpmypracticesadev.dfs.core.windows.net/hosa/departments")
 
 #Reading Hospital B departments data 
-df_hosb=spark.read.parquet("/mnt/bronze/hosb/departments")
+df_hosb=spark.read.parquet("abfss://bronze@mpmypracticesadev.dfs.core.windows.net/hosb/departments")
 
 #union two departments dataframes
 df_merged = df_hosa.unionByName(df_hosb)

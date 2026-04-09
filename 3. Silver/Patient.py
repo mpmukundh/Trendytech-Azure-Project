@@ -1,10 +1,15 @@
 # Databricks notebook source
+# MAGIC %sql
+# MAGIC USE CATALOG healthcare;
+
+# COMMAND ----------
+
 #Reading Hospital A patient data 
-df_hosa=spark.read.parquet("/mnt/bronze/hosa/patients")
+df_hosa=spark.read.parquet("abfss://bronze@mpmypracticesadev.dfs.core.windows.net/hosa/patients")
 df_hosa.createOrReplaceTempView("patients_hosa")
 
 #Reading Hospital B patient data 
-df_hosb=spark.read.parquet("/mnt/bronze/hosb/patients")
+df_hosb=spark.read.parquet("abfss://bronze@mpmypracticesadev.dfs.core.windows.net/hosb/patients")
 df_hosb.createOrReplaceTempView("patients_hosb")
 
 # COMMAND ----------
@@ -38,16 +43,16 @@ df_hosb.createOrReplaceTempView("patients_hosb")
 # MAGIC     FROM patients_hosa
 # MAGIC     UNION ALL
 # MAGIC     SELECT 
-# MAGIC     ID AS SRC_PatientID,
-# MAGIC     F_Name AS FirstName,
-# MAGIC     L_Name AS LastName,
-# MAGIC     M_Name ASMiddleName,
+# MAGIC     PatientID AS SRC_PatientID,
+# MAGIC     FirstName AS FirstName,
+# MAGIC     LastName AS LastName,
+# MAGIC     MiddleName AS MiddleName,
 # MAGIC     SSN,
 # MAGIC     PhoneNumber,
 # MAGIC     Gender,
 # MAGIC     DOB,
 # MAGIC     Address,
-# MAGIC     Updated_Date AS ModifiedDate,
+# MAGIC     ModifiedDate AS ModifiedDate,
 # MAGIC     datasource
 # MAGIC      FROM patients_hosb
 # MAGIC )

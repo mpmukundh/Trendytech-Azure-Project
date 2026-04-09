@@ -1,0 +1,313 @@
+{
+	"name": "incre_full_load",
+	"properties": {
+		"activities": [
+			{
+				"name": "If Condition - Full or Incremental",
+				"type": "IfCondition",
+				"dependsOn": [],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@equals(pipeline().parameters.load_type, 'Full')",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Fetch_logs",
+							"type": "Lookup",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "@concat(\n 'select coalesce(cast(max(loaddate) as date),''',\n '1900-01-01',''') as last_fetched_date from load_logs where ',\n ' data_source=''',pipeline().parameters.datasource\n,''' and tablename=''',pipeline().parameters.table_name,''''\n)",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"dataset": {
+									"referenceName": "audit_logs_ds",
+									"type": "DatasetReference"
+								},
+								"firstRowOnly": true
+							}
+						},
+						{
+							"name": "Insert_Logs_Incremental_Load",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "Incremental_Load_CP",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "audit_logs_ls",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "Query",
+										"text": {
+											"value": "@concat(\n 'insert into load_logs(\n data_source,tablename,numberofrowscopied,watermarkcolumnname,loaddate) values\n (''',pipeline().parameters.datasource,''',''',pipeline().parameters.table_name,''',',\n activity('Incremental_Load_CP').output.rowsCopied,',''',\n pipeline().parameters.watermark_column,''',''',utcNow(),''')'\n)",
+											"type": "Expression"
+										}
+									}
+								],
+								"scriptBlockExecutionTimeout": "02:00:00"
+							}
+						},
+						{
+							"name": "Incremental_Load_CP",
+							"type": "Copy",
+							"dependsOn": [
+								{
+									"activity": "Fetch_logs",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 5,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "@concat(\n 'select *,''',\npipeline().parameters.datasource,\n ''' as datasource from ',\npipeline().parameters.table_name,\n ' where ',\npipeline().parameters.watermark_column,\n ' >= ''',\n activity('Fetch_logs').output.firstRow.last_fetched_date,\n ''''\n)",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "hosa_b_db_ds",
+									"type": "DatasetReference",
+									"parameters": {
+										"schema_name": {
+											"value": "@pipeline().parameters.schema_name",
+											"type": "Expression"
+										},
+										"table_name": {
+											"value": "@pipeline().parameters.table_name",
+											"type": "Expression"
+										},
+										"db_name": {
+											"value": "@pipeline().parameters.database",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "bronze_file_exists_par_ds",
+									"type": "DatasetReference",
+									"parameters": {
+										"directory": {
+											"value": "@pipeline().parameters.target_path",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@pipeline().parameters.table_name",
+											"type": "Expression"
+										},
+										"container": "bronze"
+									}
+								}
+							]
+						}
+					],
+					"ifTrueActivities": [
+						{
+							"name": "Full_Load_CP",
+							"type": "Copy",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 5,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"source": {
+									"type": "AzureSqlSource",
+									"sqlReaderQuery": {
+										"value": "@concat('select *, ''',pipeline().parameters.datasource,''' as datasource from ',pipeline().parameters.table_name)",
+										"type": "Expression"
+									},
+									"queryTimeout": "02:00:00",
+									"partitionOption": "None"
+								},
+								"sink": {
+									"type": "ParquetSink",
+									"storeSettings": {
+										"type": "AzureBlobFSWriteSettings"
+									},
+									"formatSettings": {
+										"type": "ParquetWriteSettings"
+									}
+								},
+								"enableStaging": false,
+								"translator": {
+									"type": "TabularTranslator",
+									"typeConversion": true,
+									"typeConversionSettings": {
+										"allowDataTruncation": true,
+										"treatBooleanAsNumber": false
+									}
+								}
+							},
+							"inputs": [
+								{
+									"referenceName": "hosa_b_db_ds",
+									"type": "DatasetReference",
+									"parameters": {
+										"schema_name": {
+											"value": "@pipeline().parameters.schema_name",
+											"type": "Expression"
+										},
+										"table_name": {
+											"value": "@pipeline().parameters.table_name",
+											"type": "Expression"
+										},
+										"db_name": {
+											"value": "@pipeline().parameters.database",
+											"type": "Expression"
+										}
+									}
+								}
+							],
+							"outputs": [
+								{
+									"referenceName": "bronze_file_exists_par_ds",
+									"type": "DatasetReference",
+									"parameters": {
+										"directory": {
+											"value": "@pipeline().parameters.target_path",
+											"type": "Expression"
+										},
+										"file_name": {
+											"value": "@pipeline().parameters.table_name",
+											"type": "Expression"
+										},
+										"container": "bronze"
+									}
+								}
+							]
+						},
+						{
+							"name": "Insert_Logs_Full_Load",
+							"type": "Script",
+							"dependsOn": [
+								{
+									"activity": "Full_Load_CP",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "0.12:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"linkedServiceName": {
+								"referenceName": "audit_logs_ls",
+								"type": "LinkedServiceReference"
+							},
+							"typeProperties": {
+								"scripts": [
+									{
+										"type": "Query",
+										"text": {
+											"value": "@concat(\n 'insert into load_logs(\n data_source,tablename,numberofrowscopied,watermarkcolumnname,loaddate) values\n (''',pipeline().parameters.datasource,''',''',pipeline().parameters.table_name,''',',\n activity('Full_Load_CP').output.rowsCopied,',''',\n pipeline().parameters.watermark_column,''',''',utcNow(),''')'\n)",
+											"type": "Expression"
+										}
+									}
+								],
+								"scriptBlockExecutionTimeout": "02:00:00"
+							}
+						}
+					]
+				}
+			}
+		],
+		"parameters": {
+			"load_type": {
+				"type": "string"
+			},
+			"schema_name": {
+				"type": "string"
+			},
+			"table_name": {
+				"type": "string"
+			},
+			"database": {
+				"type": "string"
+			},
+			"datasource": {
+				"type": "string"
+			},
+			"watermark_column": {
+				"type": "string"
+			},
+			"target_path": {
+				"type": "string"
+			}
+		},
+		"annotations": []
+	}
+}
